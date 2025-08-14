@@ -2,7 +2,6 @@ import vue from '@vitejs/plugin-vue';
 import { posix as pathPosix, resolve } from 'path';
 import { defineConfig, mergeConfig, type UserConfig } from 'vite';
 import { viteStaticCopy } from 'vite-plugin-static-copy';
-import { nodePolyfills } from 'vite-plugin-node-polyfills';
 import svgLoader from 'vite-svg-loader';
 
 import { vitestConfig } from '@n8n/vitest-config/frontend';
@@ -12,6 +11,7 @@ import components from 'unplugin-vue-components/vite';
 import browserslistToEsbuild from 'browserslist-to-esbuild';
 import legacy from '@vitejs/plugin-legacy';
 import browserslist from 'browserslist';
+import { ElementPlusResolver } from 'unplugin-vue-components/resolvers';
 
 const publicPath = process.env.VUE_APP_PUBLIC_PATH || '/';
 
@@ -86,6 +86,7 @@ const plugins: UserConfig['plugins'] = [
 			iconsResolver({
 				prefix: 'Icon',
 			}),
+			ElementPlusResolver({ importStyle: 'css', directives: true }),
 		],
 	}),
 	viteStaticCopy({
@@ -118,7 +119,7 @@ const plugins: UserConfig['plugins'] = [
 	}),
 	legacy({
 		modernTargets: browsers,
-		modernPolyfills: true,
+		modernPolyfills: false,
 		renderLegacyChunks: false,
 	}),
 	{
@@ -132,9 +133,6 @@ const plugins: UserConfig['plugins'] = [
 		},
 	},
 	// For sanitize-html
-	nodePolyfills({
-		include: ['fs', 'path', 'url', 'util', 'timers'],
-	}),
 ];
 
 const { RELEASE: release } = process.env;
@@ -167,6 +165,24 @@ export default mergeConfig(
 			minify: !!release,
 			sourcemap: !!release,
 			target,
+			rollupOptions: {
+				output: {
+					manualChunks: {
+						vue: ['vue', 'vue-router', 'pinia'],
+						codemirror: [
+							'@codemirror/autocomplete',
+							'@codemirror/commands',
+							'@codemirror/language',
+							'@codemirror/state',
+							'@codemirror/view',
+							'codemirror-lang-html-n8n',
+						],
+						chartjs: ['chart.js', 'vue-chartjs'],
+						sentry: ['@sentry/vue'],
+						sanitize: ['sanitize-html'],
+					},
+				},
+			},
 		},
 		optimizeDeps: {
 			esbuildOptions: {

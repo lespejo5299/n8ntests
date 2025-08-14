@@ -1,7 +1,5 @@
 import type { Plugin } from 'vue';
 
-import 'regenerator-runtime/runtime';
-
 import ElementPlus, { ElLoading, ElMessageBox } from 'element-plus';
 import { N8nPlugin } from '@n8n/design-system';
 import { useMessage } from '@/composables/useMessage';

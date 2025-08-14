@@ -1,23 +1,20 @@
 <script lang="ts" setup>
 import { useI18n } from '@n8n/i18n';
 import { generateBarChartOptions } from '@/features/insights/chartjs.utils';
-import {
-	GRANULARITY_DATE_FORMAT_MASK,
-	INSIGHTS_UNIT_MAPPING,
-} from '@/features/insights/insights.constants';
-import { transformInsightsFailureRate } from '@/features/insights/insights.utils';
-import { smartDecimal } from '@n8n/utils/number/smartDecimal';
-import { useCssVar } from '@vueuse/core';
 import type { ChartData } from 'chart.js';
-import { computed } from 'vue';
+import { computed, onMounted } from 'vue';
 import { Bar } from 'vue-chartjs';
 import type { ChartProps } from './insightChartProps';
+import { ensureChartRegistered } from '@/plugins/chartjs';
 
 const props = defineProps<ChartProps>();
 
 const i18n = useI18n();
 
-const colorPrimary = useCssVar('--color-primary', document.body);
+onMounted(() => {
+	void ensureChartRegistered();
+});
+
 const chartOptions = computed(() =>
 	generateBarChartOptions({
 		plugins: {
@@ -25,7 +22,7 @@ const chartOptions = computed(() =>
 				callbacks: {
 					label: (context) => {
 						const label = context.dataset.label ?? '';
-						return `${label} ${smartDecimal(context.parsed.y)}${INSIGHTS_UNIT_MAPPING[props.type](context.parsed.y)}`;
+						return `${label} ${Math.round((context.parsed.y as number) * 100)}%`;
 					},
 				},
 			},
@@ -35,20 +32,27 @@ const chartOptions = computed(() =>
 
 const chartData = computed<ChartData<'bar'>>(() => {
 	const labels: string[] = [];
-	const data: number[] = [];
+	const failedData: number[] = [];
+	const succeededData: number[] = [];
 
 	for (const entry of props.data) {
-		labels.push(GRANULARITY_DATE_FORMAT_MASK[props.granularity](entry.date));
-		data.push(transformInsightsFailureRate(entry.values.failureRate));
+		labels.push(entry.date);
+		failedData.push(entry.values.failedRate);
+		succeededData.push(entry.values.successRate);
 	}
 
 	return {
 		labels,
 		datasets: [
 			{
-				label: i18n.baseText('insights.banner.title.failureRate'),
-				data,
-				backgroundColor: colorPrimary.value,
+				label: i18n.baseText('insights.chart.successRate'),
+				data: succeededData,
+				backgroundColor: '#3E999F',
+			},
+			{
+				label: i18n.baseText('insights.chart.failureRate'),
+				data: failedData,
+				backgroundColor: '#ff6f5c',
 			},
 		],
 	};
