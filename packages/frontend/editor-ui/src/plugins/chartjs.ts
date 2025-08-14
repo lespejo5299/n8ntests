@@ -26,3 +26,8 @@ export const ChartJSPlugin = {
 		);
 	},
 };
+
+export async function ensureChartRegistered() {
+	// noop since registration is global; kept for future lazy strategies
+	return Promise.resolve();
+}

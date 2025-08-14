@@ -23,7 +23,7 @@ import { FontAwesomePlugin } from './plugins/icons';
 
 import { createPinia, PiniaVuePlugin } from 'pinia';
 import { ChartJSPlugin } from '@/plugins/chartjs';
-import { SentryPlugin } from '@/plugins/sentry';
+// removed eager Sentry import
 
 import type { VueScanOptions } from 'z-vue-scan';
 
@@ -31,7 +31,12 @@ const pinia = createPinia();
 
 const app = createApp(App);
 
-app.use(SentryPlugin);
+// lazy-init Sentry only if configured at runtime
+if ((window as any).sentry?.dsn) {
+	const { SentryPlugin } = await import('@/plugins/sentry');
+	app.use(SentryPlugin);
+}
+
 app.use(TelemetryPlugin);
 app.use(PiniaVuePlugin);
 app.use(FontAwesomePlugin);

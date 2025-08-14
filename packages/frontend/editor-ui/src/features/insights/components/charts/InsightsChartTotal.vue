@@ -4,13 +4,18 @@ import { generateBarChartOptions } from '@/features/insights/chartjs.utils';
 import { GRANULARITY_DATE_FORMAT_MASK } from '@/features/insights/insights.constants';
 import { useCssVar } from '@vueuse/core';
 import type { ChartData } from 'chart.js';
-import { computed } from 'vue';
+import { computed, onMounted } from 'vue';
 import { Bar } from 'vue-chartjs';
 import type { ChartProps } from './insightChartProps';
+import { ensureChartRegistered } from '@/plugins/chartjs';
 
 const props = defineProps<ChartProps>();
 
 const i18n = useI18n();
+
+onMounted(() => {
+	void ensureChartRegistered();
+});
 
 const colorPrimary = useCssVar('--color-primary', document.body);
 const chartOptions = computed(() =>
